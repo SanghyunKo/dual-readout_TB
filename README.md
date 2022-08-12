@@ -3,8 +3,8 @@
 FWcore for TB data analysis
 
 ## Dependencies
-* ROOT
-* python3
+* ROOT 6.26/04
+* python 3.9.12
 * boost::python
 
 ## Compile
@@ -19,6 +19,10 @@ make install -j4
 
 ## Environment setup
 
+```sh
+source set_env.sh
+```
+or
 ```sh
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path_to_install>/lib64 # or lib based on your architecture
 export PYTHONPATH=$PYTHONPATH:<path_to_install>/lib64 # or lib based on your architecture
