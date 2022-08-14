@@ -41,6 +41,9 @@ void TButility::loading(const std::string& path) {
   int plate, column;
 
   in.open(path);
+  if(!in.good()){
+    throw std::runtime_error("TButility - cannot find mapping file!");
+  }
 
   while (true) {
     in >> mid >> ch >> module >> tower >> isCeren >>
@@ -97,6 +100,10 @@ TBdetector TButility::find(const TBcid& cid) const {
 void TButility::loadped(const std::string& path) {
   std::ifstream in;
   in.open(path, std::ios::in);
+  
+  if(!in.good()){
+    throw std::runtime_error("TButility - cannot find pedestal file!");
+  }
 
   int mid, ch;
   float ped;
