@@ -5,21 +5,27 @@ import argparse
 from tqdm import tqdm
 
 parser=argparse.ArgumentParser()
+parser.add_argument("--in_root",type=str,default="test_Fast.root",help="input root file name")
+parser.add_argument("--save_name",type=str,default="../Pictures/fast",help="plot will be saved as save_name")
+
 parser.add_argument("--draw_root",type=bool,default=True,help="Draw with ROOT else pyplot")
 parser.add_argument("--mod",type=str,default="fast",help="fast or wave")
-parser.add_argument("--in_root",type=str,default="test_Fast.root",help="input root file name")
 parser.add_argument("--mapping",type=str,default="mapping_data_MCPPMT_positiveSignal.csv",help="mapping file")
-parser.add_argument("--pedestal",type=str,default="ped_236.root",help="pedestal file")
+parser.add_argument("--pedestal",type=str,default="ped_236.csv",help="pedestal file")
+
+args=parser.parse_args()
+draw_root=args.draw_root
+mod=args.mod
+
 
 # open root file and get Tree
-in_file="test_Fast.root"
-file = ROOT.TFile(in_file)
+file = ROOT.TFile(args.in_root)
 atree = file.Get("events")
 
 # load mapping and pedestal
 utility = pydrcTB.TButility()
-utility.loading("mapping_data_MCPPMT_positiveSignal.csv")
-utility.loadped("ped_236.csv")
+utility.loading(args.mapping)
+utility.loadped(args.pedestal)
 channelsize = 32
 
 # initialize empty list
@@ -28,9 +34,7 @@ list_sipm_scint_adc=[]
 list_sipm_ceren_adc=[]
 list_pmt_scint_adc=[]
 list_pmt_ceren_adc=[]
-draw_root=False
-#draw_root=True
-
+info=[]
 print("Read entry")
 for ievt in tqdm(range(atree.GetEntries())):
     # load each entry
@@ -66,6 +70,7 @@ for ievt in tqdm(range(atree.GetEntries())):
                         pmt_scint_adc += adata.adc()
                     else:# Cerenkov channel
                         pmt_ceren_adc += adata.adc()
+                info.append([adet.column(),adet.isSiPM(),adet.plate(),adet.isCeren(),adet.module(),adet.tower()])
     #if(adc!=0):print(adc)
     # store value to list
     list_adc.append(adc)
@@ -86,7 +91,7 @@ canvas_height=1600
 num_bin=100
 xlabel="ADC sum"
 ylabel="Number of entries"
-
+count=[0,0,0,0]
 range_min=min(list_adc)
 range_max=max(list_adc)
 if(draw_root):
@@ -106,12 +111,16 @@ if(draw_root):
   # fill data to histogram
   for sipm_scint_adc in list_sipm_scint_adc:
       hist1.Fill(sipm_scint_adc)
+      count[0]+=1
   for sipm_ceren_adc in list_sipm_ceren_adc:
       hist2.Fill(sipm_ceren_adc)
+      count[1]+=1
   for pmt_scint_adc in list_pmt_scint_adc:
       hist3.Fill(pmt_scint_adc)
+      count[2]+=1
   for pmt_ceren_adc in list_pmt_ceren_adc:
       hist4.Fill(pmt_ceren_adc)
+      count[3]+=1
   # draw histogram on canvas
   c1=ROOT.TCanvas("c1","plots",canvas_width,canvas_height)
   c1.Divide(ncols,nrows)
@@ -124,7 +133,7 @@ if(draw_root):
   c1.cd(4)# right bottom
   hist4.Draw()
   # save canvas as image file
-  c1.SaveAs("../Pictures/adc_root.png")
+  c1.SaveAs("{}.png".format(args.save_name))
 else:
   px = 1/plt.rcParams['figure.dpi']
   fig,ax=plt.subplots(2,2,figsize=(10,10))
@@ -142,9 +151,6 @@ else:
       ax[i][j].set_xlabel(xlabel)
       ax[i][j].set_ylabel(ylabel)
   #print(ax.shape)
-  fig.savefig("../Pictures/adc_py.png")
+  fig.savefig("{}.png".format(args.save_name))
   pass
-print(list_sipm_scint_adc[:5])
-print(list_sipm_ceren_adc[:5])
-print(list_pmt_scint_adc[:5])
-print(list_pmt_ceren_adc[:5])
+print(count)
